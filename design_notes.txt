@@ -1,0 +1,58 @@
+
+   General concerns
+
+HTTP is stateless, this design also is. Instead of keeping track of the
+client's received messages, I'll just remember them for a bit to prevent data
+loss. Text is easy to transmit, so "vanilla" HTTP it is.
+
+In case the client is doing infrequent requests, I want to give them any
+messages they could have lost by not requesting so much. I should probably use
+a buffer for messages. I'll keep their timestamps so clients can get only
+messages newer than they have.
+
+I'll probably use a circular buffer since it's easy to implement and isn't too
+volatile in memory.
+
+
+   Minecraft-side
+
+Needs to:
+ - Connect to servers
+ - Disconnect from servers willingly (die)
+ - Reconnect to servers on involuntary disconnect (kick, connection loss)
+ - Prevent anti-AFK measures
+ - Know when to give up (time out) to prevent a ban
+ - Listen to chat
+ - Remember chat
+ - Expose status (connected, disconnected, given up, etc)
+
+
+    HTTP-side
+
+Needs to:
+ - Get messages newer than given timestamp
+ - Send messages to requester
+ - Check on the MC-side for status
+ - Restarting the client on demand
+Endpoints:
+ - Request: POST /messages
+   Payload: {"from":<Unix time>}
+   Good responses:
+       200 OK, bodied with new messages
+       304 Not Modified, no body
+   Bad reponses:
+       400 Bad Request, request is in the future or has no timestamp
+       503 Service Unavailable, when MC client is down
+ - Request: GET /status
+   Good responses:
+       200 OK, McClient is connected and listening
+       218 This is fine, McClient is alive but it's still connecting to the MC server
+       502 Bad Gateway, McClient is alive but the server is dead
+   Bad responses:
+       500 Internal Server Error, McClient is alive but it can't login to credentials.
+       503 Service Unavailable, the McClient is dead!
+ - Request: GET /defibrillators
+   Response:
+       200 OK, the McClient is revived and is working
+       403 Forbidden, the McClient is okay
+       500 Internal Server Error, check status
