@@ -2,8 +2,23 @@ var http = require("http")
 var url = require("url")
 
 http.createServer(function (request, response) {
-	var requestPath = url.parse(request.url).pathname
+	let requestPath = url.parse(request.url).pathname
 	if (request.method == "POST" && requestPath == "/messages") {
+		let data = ""
+		let timestamp = 0
+		request.on("data", blob => { data += blob })
+		request.on("end", () => {
+			try { timestamp = JSON.parse(data).from }
+			catch (e) { timestamp = -1 }
+		})
+		if (timestamp < 0)
+			return response.writeHead(400).end()
+		let unreadMessages = buffer.getMessages(timestamp)
+		if (unreadMessages) {
+			return response.writeHead(200).write(unreadMessages).end()
+		} else {
+			return response.writeHead(304).end()
+		}
 		response.writeHead(501).end()
 		return
 	}

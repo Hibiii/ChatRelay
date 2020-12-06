@@ -7,19 +7,27 @@ var client = mc.createClient({
 })
 
 client.on('chat', function (packet) {
-  var jsonMsg = JSON.parse(packet.message);
-  if (jsonMsg.translate == 'chat.type.text') {
-    buffer.add(jsonMsg.with[0].text,jsonMsg.with[1])
-  }
+  buffer.add(packet.message)
 });
 
 
 var buffer = []
 buffer.i = 0
-buffer.size = 128
+buffer.size = 32
 
-buffer.add = function (authorIn, messageIn) {
+buffer.add = function (message) {
 	buffer.i %= buffer.size
-	buffer[i] = { author: authorIn, message: messageIn, time: Date.now() }
+	buffer[buffer.i] = { data: message, time: Date.now() }
 	buffer.i++
+}
+
+buffer.getMessages = function (timestamp) {
+  let unreadMessages = []
+  let i = buffer[i];
+  do {
+    if (buffer[i] && buffer[i].time && buffer[i].time <= timestamp)
+      unreadMessages.push(buffer[i])
+    i++
+  } while (i != buffer.i)
+  return unreadMessages;
 }
