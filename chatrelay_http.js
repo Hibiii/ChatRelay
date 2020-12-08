@@ -3,17 +3,35 @@ const config = require("./config.json")
 
 // --- Minecraft side Bot ---
 const mc = require('minecraft-protocol')
-var client = mc.createClient({
-	host: config.mcHost,
-	port: config.mcPort,
-	username: config.mcUsername,
-	password: config.mcPassword
-})
-
-client.on('chat', function (packet) {
-	buffer.add(packet.message)
-});
-
+var client = null
+var clientLoginAttempts = 0
+function createClient(force) {
+	if (client) {
+		if (!client.ended) {
+			clientLoginAttempts = 0
+			return
+		}	else if (force)
+			client.end()
+	}
+	client = null
+	if (clientLoginAttempts >= config.mcSurrenderThreshold && !force) {
+		console.log(Date.now().toString() + " I can't connect...")
+		return
+	}
+	clientLoginAttempts++
+	console.log("attempt no. " + clientLoginAttempts)
+	client = mc.createClient({
+		host: config.mcHost,
+		port: config.mcPort,
+		username: config.mcUsername,
+		password: config.mcPassword
+	})
+	client.on('chat', function (packet) {
+		buffer.add(packet.message)
+	})
+	setTimeout(() => { createClient(false) }, config.mcLoginRetryInterval * 100)
+}
+createClient(false)
 
 // --- Messages Buffer ---
 var buffer = {

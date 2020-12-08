@@ -3,6 +3,8 @@
 	"mcPort": 25565,
 	"mcUsername": "ChatRelay",
 	"mcPassword": null,
+	"mcLoginRetryInterval": 30,
+	"mcSurrenderThreshold": 15,
 	"bufferSize": 64,
 	"httpPort": 25566
 }
