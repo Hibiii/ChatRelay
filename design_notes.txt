@@ -35,8 +35,7 @@ Needs to:
  - Check on the MC-side for status
  - Restarting the client on demand
 Endpoints:
- - Request: POST /messages
-   Payload: {"from":<Unix time>}
+ - Request: GET /messages
    Good responses:
        200 OK, bodied with new messages
        304 Not Modified, no body

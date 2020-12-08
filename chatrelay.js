@@ -85,28 +85,22 @@ const http = require("http")
 const url = require("url")
 
 // Glue together the buffer and the web
-function respondPostMessages(request, response) {
-	let data = ""
-	let timestamp = 0
+function respondGetMessages(request, response) {
+	if (client == null)
+		return response.writeHead(503).end()
 
-	// I'm not using headers, but straight JSON
-	// !!! THIS USES A MAGIC ERROR NUMBER
-	request.on("data", blob => { data += blob })
-	request.on("end", () => {
-		try { timestamp = JSON.parse(data).from }
-		catch (e) { timestamp = -1 }
-	})
+	let timestamp = -1
 
+	timestamp = Date.parse(request.headers['if-modified-since'])
 	// Handle badly formed bodies.
-	if (timestamp < 0) {
+	if (timestamp < 1) {
 		response.writeHead(400)
 		response.end()
 		return
 	}
-
 	// Status code is dependent on whether or not we have new messages.
 	let unreadMessages = buffer.getMessages(timestamp)
-	if (unreadMessages) {
+	if (unreadMessages.length > 0) {
 		response.writeHead(200)
 		response.write(JSON.stringify(unreadMessages))
 		response.end()
@@ -160,15 +154,12 @@ function respondGetDefibrillators(response) {
 // Basic scaffolding for handling all types of requests
 http.createServer(function (request, response) {
 	let requestPath = url.parse(request.url).pathname
-	if (request.method == "POST" && requestPath == "/messages") {
-		return respondPostMessages(request, response)
-	}
 	if (request.method != "GET") {
 		response.writeHead(405).end()
 		return
 	}
 	switch (requestPath) {
-		case "/messages":	return response.writeHead(400).end()
+		case "/messages": return respondGetMessages(request, response)
 		case "/status": return respondGetStatus(response)
 		case "/defibrillators": return respondGetDefibrillators(response)
 		default: return response.writeHead(404).end()
