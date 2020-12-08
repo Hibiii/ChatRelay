@@ -6,8 +6,8 @@ const config = require("./config.json")
 const mc = require('minecraft-protocol')
 var client = null
 var clientLoginAttempts = 0
+var clientRadioCheck = null
 
-// This is a recursive function
 // Stopping condition is either a working client or giving up
 function createClient(force) {
 
@@ -25,6 +25,7 @@ function createClient(force) {
 	if (clientLoginAttempts >= config.mcSurrenderThreshold && !force) {
 		console.log(Date.now().toLocaleString() + " I can't connect...")
 		client = null
+		clearInterval(clientRadioCheck)
 		return
 	}
 
@@ -40,11 +41,9 @@ function createClient(force) {
 	client.on('chat', function (packet) {
 		buffer.add(packet.message)
 	})
-	// Wait a little before trying again
-	// Don't force! or you'll be in an infinite loop
-	setTimeout(() => { createClient(false) }, config.mcLoginRetryInterval * 100)
 }
 createClient(false)
+clientRadioCheck = setInterval(() => { createClient(false) }, config.mcLoginRetryInterval * 1000)
 
 
 // --- Messages Buffer ---
@@ -146,6 +145,7 @@ function respondGetDefibrillators(response) {
 	} else {
 		buffer.reset()
 		createClient(true)
+		clientRadioCheck = setInterval(() => { createClient(false) }, config.mcLoginRetryInterval * 1000)
 		// Wait a little before checking
 		setTimeout(() => {
 			if (client && !client.ended)
