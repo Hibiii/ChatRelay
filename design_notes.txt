@@ -46,10 +46,8 @@ Endpoints:
  - Request: GET /status
    Good responses:
        200 OK, McClient is connected and listening
-       218 This is fine, McClient is alive but it's still connecting to the MC server
-       502 Bad Gateway, McClient is alive but the server is dead
+       218 This is fine, McClient is alive but it's trying to connect to the MC server
    Bad responses:
-       500 Internal Server Error, McClient is alive but it can't login to credentials.
        503 Service Unavailable, the McClient is dead!
  - Request: GET /defibrillators
    Response:

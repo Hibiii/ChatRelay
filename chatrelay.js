@@ -23,7 +23,8 @@ function createClient(force) {
 
 	// Don't waste resources if network is bad or I'm banned
 	if (clientLoginAttempts >= config.mcSurrenderThreshold && !force) {
-		console.log(Date.now().toString() + " I can't connect...")
+		console.log(Date.now().toLocaleString() + " I can't connect...")
+		client = null
 		return
 	}
 
@@ -84,61 +85,92 @@ var buffer = {
 const http = require("http")
 const url = require("url")
 
+// Glue together the buffer and the web
+function respondPostMessages(request, response) {
+	let data = ""
+	let timestamp = 0
+
+	// I'm not using headers, but straight JSON
+	// !!! THIS USES A MAGIC ERROR NUMBER
+	request.on("data", blob => { data += blob })
+	request.on("end", () => {
+		try { timestamp = JSON.parse(data).from }
+		catch (e) { timestamp = -1 }
+	})
+
+	// Handle badly formed bodies.
+	if (timestamp < 0) {
+		response.writeHead(400)
+		response.end()
+		return
+	}
+
+	// Status code is dependent on whether or not we have new messages.
+	let unreadMessages = buffer.getMessages(timestamp)
+	if (unreadMessages) {
+		response.writeHead(200)
+		response.write(JSON.stringify(unreadMessages))
+		response.end()
+		return
+	} else {
+		response.writeHead(304) // Not Modified
+		response.end()
+		return
+	}
+}
+
+// Get the current status of MC-side
+function respondGetStatus(response) {
+	if (client) {
+		if (client.ended) {
+			// "Yellow light"
+			response.statusCode = 218
+			response.statusMessage = "This is fine"
+			response.end()
+		} else {
+			// "Green light"
+			response.writeHead(200).end()
+		}
+	} else {
+		// "Red light"
+		response.writeHead(503).end()
+	}
+}
+
+// Add an ability for the MC-side to restart on demand
+function respondGetDefibrillators(response) {
+	// Alive, don't touch
+	if (client && !client.ended) {
+		response.writeHead(403).end()
+		return
+	} else {
+		buffer.reset()
+		createClient(true)
+		// Wait a little before checking
+		setTimeout(() => {
+			if (client && !client.ended)
+				response.writeHead(200).end()
+			else
+				response.writeHead(500).end()
+		}, config.httpDefibWait * 1000)
+
+	}
+}
+
+// Basic scaffolding for handling all types of requests
 http.createServer(function (request, response) {
 	let requestPath = url.parse(request.url).pathname
 	if (request.method == "POST" && requestPath == "/messages") {
-		let data = ""
-		let timestamp = 0
-		request.on("data", blob => { data += blob })
-		request.on("end", () => {
-			try { timestamp = JSON.parse(data).from }
-			catch (e) { timestamp = -1 }
-		})
-		if (timestamp < 0) {
-			response.writeHead(400)
-			response.end()
-			return
-		}
-		let unreadMessages = buffer.getMessages(timestamp)
-		if (unreadMessages) {
-			response.writeHead(200)
-			response.write(unreadMessages.toString())
-			response.end()
-			return
-		} else {
-			response.writeHead(304)
-			response.end()
-			return
-		}
-		response.writeHead(501).end()
-		return
+		return respondPostMessages(request, response)
 	}
 	if (request.method != "GET") {
 		response.writeHead(405).end()
 		return
 	}
 	switch (requestPath) {
-		case "/status":
-			response.writeHead(501).end()
-			return
-		case "/defibrillators":
-			if (client && !client.ended) {
-				response.writeHead(403).end()
-				return
-			} else {
-				createClient(true)
-				setTimeout(() => {
-					if (client && !client.ended)
-						response.writeHead(200).end();
-					else
-						response.writeHead(500).end();}, config.httpDefibWait * 1000)
-				
-			}
-			return
-		default:
-			response.writeHead(404)
-			response.write("404: The endpoint \"" + requestPath + "\" does not exist.")
-			response.end()
-			return
+		case "/messages":	return response.writeHead(400).end()
+		case "/status": return respondGetStatus(response)
+		case "/defibrillators": return respondGetDefibrillators(response)
+		default: return response.writeHead(404).end()
 	}
 }).listen(config.httpPort)
