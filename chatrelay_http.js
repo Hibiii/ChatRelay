@@ -1,9 +1,13 @@
+// --- Config ---
+const config = require("./config.json")
+
+// --- Minecraft side Bot ---
 const mc = require('minecraft-protocol')
 var client = mc.createClient({
-	host: "localhost",   // optional
-	port: 25565,         // optional
-	username: "steve@minecraft.net",
-	password: "i love diamonds"
+	host: config.mcHost,
+	port: config.mcPort,
+	username: config.mcUsername,
+	password: config.mcPassword
 })
 
 client.on('chat', function (packet) {
@@ -11,9 +15,10 @@ client.on('chat', function (packet) {
 });
 
 
+// --- Messages Buffer ---
 var buffer = []
 buffer.i = 0
-buffer.size = 32
+buffer.size = config.bufferSize
 
 buffer.add = function (message) {
 	buffer.i %= buffer.size
@@ -33,8 +38,9 @@ buffer.getMessages = function (timestamp) {
 }
 
 
-var http = require("http")
-var url = require("url")
+// --- HTTP facing API ---
+const http = require("http")
+const url = require("url")
 
 http.createServer(function (request, response) {
 	let requestPath = url.parse(request.url).pathname
@@ -82,4 +88,4 @@ http.createServer(function (request, response) {
 			response.end()
 			return
 	}
-}).listen(25566)
+}).listen(config.httpPort)

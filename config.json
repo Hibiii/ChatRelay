@@ -1,0 +1,8 @@
+{
+	"mcHost": "localhost",
+	"mcPort": 25565,
+	"mcUsername": "ChatRelay",
+	"mcPassword": null,
+	"bufferSize": 64,
+	"httpPort": 25566
+}
