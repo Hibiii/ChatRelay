@@ -6,5 +6,6 @@
 	"mcLoginRetryInterval": 30,
 	"mcSurrenderThreshold": 15,
 	"bufferSize": 64,
-	"httpPort": 25566
+	"httpPort": 25566,
+	"httpDefibWait": 3
 }

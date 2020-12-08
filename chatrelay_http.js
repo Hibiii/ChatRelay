@@ -84,7 +84,7 @@ http.createServer(function (request, response) {
 		let unreadMessages = buffer.getMessages(timestamp)
 		if (unreadMessages) {
 			response.writeHead(200)
-			response.write(unreadMessages)
+			response.write(unreadMessages.toString())
 			response.end()
 			return
 		} else {
@@ -104,7 +104,18 @@ http.createServer(function (request, response) {
 			response.writeHead(501).end()
 			return
 		case "/defibrillators":
-			response.writeHead(501).end()
+			if (client && !client.ended) {
+				response.writeHead(403).end()
+				return
+			} else {
+				createClient(true)
+				setTimeout(() => {
+					if (client && !client.ended)
+						response.writeHead(200).end();
+					else
+						response.writeHead(500).end();},config.httpDefibWait*1000)
+				
+			}
 			return
 		default:
 			response.writeHead(404)
