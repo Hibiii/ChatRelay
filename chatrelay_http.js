@@ -16,25 +16,31 @@ client.on('chat', function (packet) {
 
 
 // --- Messages Buffer ---
-var buffer = []
-buffer.i = 0
-buffer.size = config.bufferSize
+var buffer = {
+	b: [],
+	i: 0,
+	size: config.bufferSize,
 
-buffer.add = function (message) {
-	buffer.i %= buffer.size
-	buffer[buffer.i] = { data: message, time: Date.now() }
-	buffer.i++
-}
+	add: function (message) {
+		this.i %= buffer.size
+		this.b[this.i] = { data: message, time: Date.now() }
+		this.i++
+	},
 
-buffer.getMessages = function (timestamp) {
-	let unreadMessages = []
-	let i = buffer.i;
-	do {
-		if (buffer[i] && buffer[i].time && buffer[i].time > timestamp)
-			unreadMessages.push(buffer[i])
-		i = (i + 1) % buffer.size 
-	} while (i != buffer.i)
-	return unreadMessages;
+	getMessages: function (timestamp) {
+		let unreadMessages = []
+		let j = this.i;
+		do {
+			if (this.b[j] && this.b[j].time && this.b[j].time > timestamp)
+				unreadMessages.push(this.b[j])
+			j = (j + 1) % this.size
+		} while (j != this.i)
+		return unreadMessages
+	},
+
+	reset: function () {
+		this.b = []
+	}
 }
 
 
