@@ -1,11 +1,16 @@
 // --- Config ---
 const config = require("./config.json")
 
+
 // --- Minecraft side Bot ---
 const mc = require('minecraft-protocol')
 var client = null
 var clientLoginAttempts = 0
+
+// This is a recursive function
+// Stopping condition is either a working client or giving up
 function createClient(force) {
+
 	if (client) {
 		if (!client.ended) {
 			clientLoginAttempts = 0
@@ -13,38 +18,49 @@ function createClient(force) {
 		}	else if (force)
 			client.end()
 	}
+
 	client = null
+
+	// Don't waste resources if network is bad or I'm banned
 	if (clientLoginAttempts >= config.mcSurrenderThreshold && !force) {
 		console.log(Date.now().toString() + " I can't connect...")
 		return
 	}
+
 	clientLoginAttempts++
-	console.log("attempt no. " + clientLoginAttempts)
+	// client.connect() has been giving me WriteAfterEnd exceptions
 	client = mc.createClient({
 		host: config.mcHost,
 		port: config.mcPort,
 		username: config.mcUsername,
 		password: config.mcPassword
 	})
+	// We always need to do this when making a new client
 	client.on('chat', function (packet) {
 		buffer.add(packet.message)
 	})
+	// Wait a little before trying again
+	// Don't force! or you'll be in an infinite loop
 	setTimeout(() => { createClient(false) }, config.mcLoginRetryInterval * 100)
 }
 createClient(false)
 
+
 // --- Messages Buffer ---
 var buffer = {
-	b: [],
-	i: 0,
-	size: config.bufferSize,
+	b: [],                     // Circular buffer
+	i: 0,                      // Requires an internal index
+	size: config.bufferSize,   // Save it for modulus
 
+	// It's okay if I override, because the messages will be too old
 	add: function (message) {
 		this.i %= buffer.size
 		this.b[this.i] = { data: message, time: Date.now() }
 		this.i++
 	},
 
+	// I will loop through the buffer entirely, oldest messages first
+	// Buffer i should always be immediately next to the newest message
 	getMessages: function (timestamp) {
 		let unreadMessages = []
 		let j = this.i;
@@ -56,8 +72,10 @@ var buffer = {
 		return unreadMessages
 	},
 
+	// Just in case
 	reset: function () {
 		this.b = []
+		this.i = 0
 	}
 }
 
@@ -113,7 +131,7 @@ http.createServer(function (request, response) {
 					if (client && !client.ended)
 						response.writeHead(200).end();
 					else
-						response.writeHead(500).end();},config.httpDefibWait*1000)
+						response.writeHead(500).end();}, config.httpDefibWait * 1000)
 				
 			}
 			return
