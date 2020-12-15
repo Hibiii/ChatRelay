@@ -39,7 +39,7 @@ function createClient(force) {
 	})
 	// We always need to do this when making a new client
 	client.on('chat', function (packet) {
-		buffer.add(packet.message)
+		buffer.add(JSON.parse(packet.message))
 	})
 }
 createClient(false)
@@ -65,7 +65,7 @@ var buffer = {
 	// Buffer i should always be immediately next to the newest message
 	getMessages: function (timestamp) {
 		let unreadMessages = []
-		let j = this.i;
+		let j = this.i
 		do {
 			if (this.b[j] && this.b[j].time && this.b[j].time > timestamp)
 				unreadMessages.push(this.b[j])
@@ -79,12 +79,12 @@ var buffer = {
 		let unreadMessages = ""
 		let rawMessage = null
 		let latestTime = 0
-		let j = this.i;
+		let j = this.i
 		do {
 			if (this.b[j] && this.b[j].time && this.b[j].time > timestamp) {
 				if (this.b[j].time > latestTime)
 					latestTime = this.b[j].time
-				rawMessage = new ChatMessage(JSON.parse(this.b[j].data))
+				rawMessage = new ChatMessage(this.b[j].data)
 				unreadMessages += rawMessage.toString() + "\r\n"
 			}
 			j = (j + 1) % this.size
