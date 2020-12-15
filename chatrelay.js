@@ -167,6 +167,19 @@ function respondGetStatus(response) {
 	}
 }
 
+// Respond with a 405
+function respondNonGets(response, requestPath) {
+	if(
+		requestPath != "/messages" &&
+		requestPath != "/status" &&
+		requestPath != "/defibrillators"
+	)
+		return false
+	response.setHeader("Allow", "GET")
+	response.writeHead(405).end()
+	return true
+}
+
 // Add an ability for the MC-side to restart on demand
 function respondGetDefibrillators(response) {
 	// Alive, don't touch
@@ -192,8 +205,8 @@ function respondGetDefibrillators(response) {
 http.createServer(function (request, response) {
 	let requestPath = url.parse(request.url).pathname
 	if (request.method != "GET") {
-		response.writeHead(405).end()
-		return
+		if(respondNonGets(response, requestPath))
+			return
 	}
 	switch (requestPath) {
 		case "/messages": return respondGetMessages(request, response)
