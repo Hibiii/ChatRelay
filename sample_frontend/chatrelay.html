@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+html {
+	background: #111;
+	color: #fff;
+	padding: 0.4in
+}
+h1, h2 {
+	display: inline-block;
+	font-size: 1.2em;
+	padding: 0 1em;
+}
+a {
+	color:unset;
+	padding: 0 0.7em
+}
+.top {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between
+}
+.view {
+	border: 1px solid chartreuse;
+	padding: 0.5em 1.5em
+}
+#icon.green { color: #7b1 }
+#icon.yellow { color: #eb1 }
+#icon.red { color: #b11 }
+</style>
+<title>ChatRelay</title>
+<div class="top">
+	<div>
+		<h1>ChatRelay</h1>
+		<span id="icon" class="red">●</span>
+		<span id="status">on <span id="host">blockmania.com</span></span>
+	</div>
+	<div>
+		<a href="#">restart</a>
+		<a href="#">updates: 1s</a>
+	</div>
+</div>
+<div class="view">
+You have joined the game<br>
+&lt;Hibi&gt; aaa<br>
+&lt;Hibi&gt; cock<br>
+omgstop joined the game
+</div>
+<script src="chatrelay_client.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', ChatRelay.start(
+	document.getElementsByClassName("view")[0],
+	null,
+	null,
+	2));
+</script>

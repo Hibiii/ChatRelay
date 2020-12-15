@@ -8,5 +8,6 @@
 	"mcSurrenderThreshold": 15,
 	"bufferSize": 64,
 	"httpPort": 25566,
-	"httpDefibWait": 3
+	"httpDefibWait": 3,
+	"infoHideUsername": false
 }
