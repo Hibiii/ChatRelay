@@ -175,9 +175,10 @@ function respondGetInfo(response) {
 	let info = {
 		mcVersion: config.mcVersion,
 		mcHost: config.mcHost,
-		mcPort: config.mcPort,
-		mcUsername: client.username
+		mcPort: config.mcPort
 	}
+	if (!config.infoHideUsername)
+		info.mcUsername = client.username
 	response.writeHead(200)
 	response.write(JSON.stringify(info))
 	response.end()

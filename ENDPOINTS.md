@@ -47,9 +47,9 @@ The following endpoints are available to web clients:
   - **503 Service Unavailable**: the Minecraft client is down.
 - JSON response fields:
   - mcHost: the Minecraft server to listen from
-  - mcPort: the port of said server
-  - mcVersion: the Minecraft server's version
-  - mcUsername: the username of the player being used to snoop chat with
+  - mcPort: the port of said server.
+  - mcVersion: the Minecraft server's version.
+  - mcUsername: (optional) the username of the player being used to snoop chat with. This option may be disabled.
 
 
 ## /defibrillators
