@@ -34,6 +34,7 @@ function createClient(force) {
 	client = mc.createClient({
 		host: config.mcHost,
 		port: config.mcPort,
+		version: config.mcVersion,
 		username: config.mcUsername,
 		password: config.mcPassword
 	})
