@@ -93,7 +93,7 @@ function respondGetMessages(request, response) {
 
 	timestamp = Date.parse(request.headers['if-modified-since'])
 	// Handle badly formed bodies.
-	if (timestamp < 1) {
+	if (isNaN(timestamp)) {
 		response.writeHead(400)
 		response.end()
 		return
