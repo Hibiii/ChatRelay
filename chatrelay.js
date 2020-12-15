@@ -15,7 +15,7 @@ function createClient(force) {
 		if (!client.ended) {
 			clientLoginAttempts = 0
 			return
-		}	else if (force)
+		} else if (force)
 			client.end()
 	}
 
@@ -47,6 +47,8 @@ clientRadioCheck = setInterval(() => { createClient(false) }, config.mcLoginRetr
 
 
 // --- Messages Buffer ---
+const ChatMessage = require("prismarine-chat")(config.mcVersion)
+
 var buffer = {
 	b: [],                     // Circular buffer
 	i: 0,                      // Requires an internal index
@@ -71,6 +73,26 @@ var buffer = {
 		} while (j != this.i)
 		return unreadMessages
 	},
+
+	// Same thing but use raw strings
+	getRawMessages: function (timestamp) {
+		let unreadMessages = ""
+		let rawMessage = null
+		let latestTime = 0
+		let j = this.i;
+		do {
+			if (this.b[j] && this.b[j].time && this.b[j].time > timestamp) {
+				if (this.b[j].time > latestTime)
+					latestTime = this.b[j].time
+				rawMessage = new ChatMessage(JSON.parse(this.b[j].data))
+				unreadMessages += rawMessage.toString() + "\r\n"
+			}
+			j = (j + 1) % this.size
+		} while (j != this.i)
+		let t = new Date(latestTime)
+		return { data: unreadMessages, time: t.toUTCString() }
+	},
+
 
 	// Just in case
 	reset: function () {
@@ -97,6 +119,21 @@ function respondGetMessages(request, response) {
 		response.writeHead(400)
 		response.end()
 		return
+	}
+	// Send raw text if asked for
+	if (request.headers["accept"] == "text/plain") {
+		let unreadRawMessages = buffer.getRawMessages(timestamp)
+		if (unreadRawMessages.data) {
+			response.setHeader("Last-Modified", unreadRawMessages.time)
+			response.writeHead(200)
+			response.write(unreadRawMessages.data)
+			response.end()
+			return
+		} else {
+			response.writeHead(304) // Not Modified
+			response.end()
+			return
+		}
 	}
 	// Status code is dependent on whether or not we have new messages.
 	let unreadMessages = buffer.getMessages(timestamp)

@@ -1,4 +1,5 @@
 {
+	"mcVersion": "1.16.4",
 	"mcHost": "localhost",
 	"mcPort": 25565,
 	"mcUsername": "ChatRelay",
