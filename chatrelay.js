@@ -167,12 +167,28 @@ function respondGetStatus(response) {
 	}
 }
 
+// Get mostly static info
+function respondGetInfo(response) {
+	if(client == null)
+		return response.writeHead(503).end()
+	let info = {
+		mcVersion: config.mcVersion,
+		mcHost: config.mcHost,
+		mcPort: config.mcPort,
+		mcUsername: client.username
+	}
+	response.writeHead(200)
+	response.write(JSON.stringify(info))
+	response.end()
+}
+
 // Respond with a 405
 function respondNonGets(response, requestPath) {
 	if(
 		requestPath != "/messages" &&
 		requestPath != "/status" &&
-		requestPath != "/defibrillators"
+		requestPath != "/defibrillators" &&
+		requestPath != "/info"
 	)
 		return false
 	response.setHeader("Allow", "GET")
@@ -212,6 +228,7 @@ http.createServer(function (request, response) {
 		case "/messages": return respondGetMessages(request, response)
 		case "/status": return respondGetStatus(response)
 		case "/defibrillators": return respondGetDefibrillators(response)
+		case "/info": return respondGetInfo(response)
 		default: return response.writeHead(404).end()
 	}
 }).listen(config.httpPort)

@@ -39,6 +39,19 @@ The following endpoints are available to web clients:
   - **218 This is fine**: (Yellow) the Minecraft client is trying to connect to the MC server, please wait.
   - **503 Service Unavailable**: (Red) the Minecraft client cannot connect to the MC server and will not try to connect again without intervention.
 
+## /info
+
+- This is used to get mostly static info about the service.
+- The two response codes are:
+  - **200 OK**: attached by a JSON object with info.
+  - **503 Service Unavailable**: the Minecraft client is down.
+- JSON response fields:
+  - mcHost: the Minecraft server to listen from
+  - mcPort: the port of said server
+  - mcVersion: the Minecraft server's version
+  - mcUsername: the username of the player being used to snoop chat with
+
+
 ## /defibrillators
 
 - This is used to manually reconnect the Minecraft client to the server. In other words, revive the client, GET /defibrillators!
